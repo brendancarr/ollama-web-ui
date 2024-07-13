@@ -4,50 +4,55 @@
 <head>
     <title>Chat with Llama2</title>
     <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
-    <link href="resources/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
-    <script src="resources/bootstrap.bundle.min.js"
-        integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm"
-        crossorigin="anonymous"></script>
-    <script src="resources/marked.min.js"
-        integrity="sha384-dZulhREgb+hCgQMhZ2VG0l37VQj5pJBq2w0h7Jn3tdMn36aXNepF1+FMLBB4O649"
-        crossorigin="anonymous"></script>
-    <script src="resources/purify.min.js" integrity="sha256-QigBQMy2be3IqJD2ezKJUJ5gycSmyYlRHj2VGBuITpU="
-        crossorigin="anonymous"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="resources/marked.min.js"></script>
+    <script src="resources/purify.min.js"></script>
     <link rel="stylesheet" href="chat.css">
 </head>
 
 <body data-bs-theme="dark">
     <div class="container">
-        <div class="row pt-3">
-            <div class="col-md-8 col-12">
-                <h1>Chat with Ollama</h1>
-            </div>
-            <div id="model-controls" class="col-md-4 col-12 text-md-end text-start mb-3">
-                <div class="d-flex flex-column align-items-md-end align-items-start">
-
-                    <div id="host-address-select">
-                        <div class="d-flex align-items-center mb-2">
-                            <label for="host-address" class="form-label me-2" style="font-size: smaller;">Hostname</label>
-                            <input id="host-address" class="form-control" type="text" placeholder="http://localhost:11434" style="width: auto;"></select>
-                        </div>
-                    </div>
-
-
-
-                    <div class="d-flex align-items-center mb-2">
-                        <label for="model-select" class="form-label me-2" style="font-size: smaller;">Model:</label>
-                        <select class="form-select" id="model-select" style="width: auto;"></select>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <label for="chat-select" class="form-label me-2" style="font-size: smaller;">History:</label>
-                        <select id="chat-select" class="form-select" style="width: auto;">
-                            <option value="" disabled selected>Select a chat</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
+      <div class="row pt-3">
+        <div class="col-md-8 col-12">
+          <h1>Chat with Ollama</h1>
         </div>
+        <div class="col-md-4 col-12">
+          <div class="accordion" id="modelControlsAccordion">
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="modelControlsHeader">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#modelControlsContent" aria-expanded="false" aria-controls="modelControlsContent">
+                  Model Controls
+                </button>
+              </h2>
+              <div id="modelControlsContent" class="accordion-collapse collapse" aria-labelledby="modelControlsHeader" data-bs-parent="#modelControlsAccordion">
+                <div class="accordion-body">
+                  <div id="model-controls" class="text-md-end text-start mb-3">
+                    <div class="d-flex flex-column align-items-md-end align-items-start">
+                      <div id="host-address-select">
+                        <div class="d-flex align-items-center mb-2">
+                          Hostname
+                          <input id="host-address" type="text" class="form-control ms-2">
+                        </div>
+                      </div>
+                      <div class="d-flex align-items-center mb-2">
+                        Model:
+                        <select id="model-select" class="form-select ms-2"></select>
+                      </div>
+                      <div class="d-flex align-items-center">
+                        History:
+                        <select id="chat-select" class="form-select ms-2">
+                          <option value="" disabled selected>Select a chat</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
         <div id="scroll-wrapper">
             <div id="chat-container" class="card">
                 <div class="text-end">
@@ -60,12 +65,19 @@
             </div>
         </div>
     </div>
-    <div class="container p-2 card" id="input-area">
-        <div class="input-group">
-            <textarea class="form-control" id="user-input" placeholder="Type your question here..."></textarea>
-            <button id="send-button" class="btn btn-primary">Send</button>
-        </div>
-    </div>
+<div id="input-area" class="container p-2 card">
+  <div id="selected-files" class="mb-2"></div>
+  <div class="input-group">
+    <label for="file-input" class="btn btn-outline-secondary">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-paperclip" viewBox="0 0 16 16">
+        <path d="M4.5 3a2.5 2.5 0 0 1 5 0v9a1.5 1.5 0 0 1-3 0V5a.5.5 0 0 1 1 0v7a.5.5 0 0 0 1 0V3a1.5 1.5 0 1 0-3 0v9a2.5 2.5 0 0 0 5 0V5a.5.5 0 0 1 1 0v7a3.5 3.5 0 1 1-7 0V3z"/>
+      </svg>
+    </label>
+    <input type="file" id="file-input" class="d-none" multiple>
+    <textarea id="user-input" class="form-control" rows="1" placeholder="Type your message..."></textarea>
+    <button id="send-button" class="btn btn-primary">Send</button>
+  </div>
+</div>
 
 <!-- Modal -->
 <div class="modal fade" id="nameModal" tabindex="-1" aria-labelledby="nameModalLabel" aria-hidden="true">

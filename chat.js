@@ -13,6 +13,16 @@ Also see: https://github.com/jmorganca/ollama/blob/main/docs/faq.md
 `;
 
 
+let selectedFiles = [];
+
+document.getElementById('file-input').addEventListener('change', function(event) {
+  const files = event.target.files;
+  for (let file of files) {
+    selectedFiles.push(file);
+  }
+  updateSelectedFilesDisplay();
+});
+
 
 const clipboardIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
 <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
@@ -25,6 +35,25 @@ marked.use({
   mangle: false,
   headerIds: false
 });
+
+function updateSelectedFilesDisplay() {
+  const selectedFilesElement = document.getElementById('selected-files');
+  selectedFilesElement.innerHTML = '';
+  selectedFiles.forEach((file, index) => {
+    const fileElement = document.createElement('div');
+    fileElement.className = 'alert alert-secondary d-inline-block me-2 mb-2';
+    fileElement.innerHTML = `
+      ${file.name}
+      <button type="button" class="btn-close ms-2" aria-label="Close" onclick="removeFile(${index})"></button>
+    `;
+    selectedFilesElement.appendChild(fileElement);
+  });
+}
+
+function removeFile(index) {
+  selectedFiles.splice(index, 1);
+  updateSelectedFilesDisplay();
+}
 
 function autoFocusInput() {
   const userInput = document.getElementById('user-input');
@@ -44,6 +73,15 @@ function updateModelInQueryString(model) {
     const newPathWithQuery = `${window.location.pathname}?${searchParams.toString()}`
     window.history.replaceState(null, '', newPathWithQuery);
   }
+}
+
+function readFileAsText(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = event => resolve(event.target.result);
+    reader.onerror = error => reject(error);
+    reader.readAsText(file);
+  });
 }
 
 // Fetch available models and populate the dropdown
@@ -121,6 +159,16 @@ const autoScroller = new ResizeObserver(() => {
   }
 });
 
+document.getElementById('user-input').addEventListener('keydown', function (e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault(); // Prevent default to avoid line break
+    submitRequest();
+  } else if (e.key === 'Enter' && e.shiftKey) {
+    // Allow Shift+Enter for line breaks
+    return true;
+  }
+});
+
 // event listener for scrolling
 let lastKnownScrollPosition = 0;
 let ticking = false;
@@ -147,21 +195,63 @@ document.addEventListener("scroll", (event) => {
   lastKnownScrollPosition = window.scrollY;
 });
 
+function autoResize(textarea) {
+  textarea.style.height = 'auto';
+  textarea.style.height = textarea.scrollHeight + 'px';
+}
+
+document.getElementById('user-input').addEventListener('input', function() {
+  autoResize(this);
+});
 
 // Function to handle the user input and call the API functions
 async function submitRequest() {
   document.getElementById('chat-container').style.display = 'block';
-
+  const userInput = document.getElementById('user-input');
+    
   const input = document.getElementById('user-input').value;
   const selectedModel = getSelectedModel();
   const context = document.getElementById('chat-history').context;
-  const data = { model: selectedModel, prompt: input, context: context };
+  const fileInput = document.getElementById('file-input');
+  const files = fileInput.files;
+    
+  if (input === '' && files.length === 0) {
+    return; // Don't send if there's no input and no files
+  }
+  let fileContents = [];
+
+  if (files.length > 0) {
+    for (let file of files) {
+      try {
+        const content = await readFileAsText(file);
+        fileContents.push({ name: file.name, content: content });
+      } catch (error) {
+        console.error(`Error reading file ${file.name}:`, error);
+      }
+    }
+  }
+
+  const data = { 
+    model: selectedModel, 
+    prompt: input, 
+    context: context,
+    files: fileContents
+  };
+  document.getElementById('file-input').value = '';
+  document.getElementById('selected-files').value = '';
+  userInput.value = '';
+  userInput.style.height = 'auto';
+    
+  //const data = { model: selectedModel, prompt: input, context: context };
 
   // Create user message element and append to chat history
   let chatHistory = document.getElementById('chat-history');
   let userMessageDiv = document.createElement('div');
   userMessageDiv.className = 'mb-2 user-message';
   userMessageDiv.innerText = input;
+  if (files.length > 0) {
+    userMessageDiv.innerText += `\n\n(Uploaded files: ${fileNames.join(', ')})`;
+  }
   chatHistory.appendChild(userMessageDiv);
 
   // Create response container
@@ -182,7 +272,7 @@ async function submitRequest() {
   stopButton.onclick = (e) => {
     e.preventDefault();
     interrupt.abort('Stop button pressed');
-  }
+  };
   // add button after sendButton
   const sendButton = document.getElementById('send-button');
   sendButton.insertAdjacentElement('beforebegin', stopButton);
@@ -222,6 +312,9 @@ async function submitRequest() {
     .then(() => {
       stopButton.remove(); // Remove stop button from DOM now that all text has been generated
       spinner.remove();
+      // Clear user input
+      selectedFiles = [];
+      updateSelectedFilesDisplay();
     })
     .catch(error => {
       if (error !== 'Stop button pressed') {
@@ -231,8 +324,8 @@ async function submitRequest() {
       spinner.remove();
     });
 
-  // Clear user input
-  document.getElementById('user-input').value = '';
+
+    
 }
 
 // Event listener for Ctrl + Enter or CMD + Enter
