@@ -214,6 +214,7 @@ async function submitRequest() {
   const input = document.getElementById('user-input').value;
   const selectedModel = getSelectedModel();
   const context = document.getElementById('chat-history').context;
+  const systemPrompt = document.getElementById('system-prompt').value;
   const fileInput = document.getElementById('file-input');
   const files = fileInput.files;
     
@@ -237,14 +238,15 @@ async function submitRequest() {
     model: selectedModel, 
     prompt: input, 
     context: context,
-    files: fileContents
+    files: fileContents,
+    system: systemPrompt
   };
+
+  // Removes file input elements so it doesn't just sit there while waiting
   document.getElementById('file-input').value = '';
   document.getElementById('selected-files').value = '';
   userInput.value = '';
   userInput.style.height = 'auto';
-    
-  //const data = { model: selectedModel, prompt: input, context: context };
 
   // Create user message element and append to chat history
   let chatHistory = document.getElementById('chat-history');
@@ -275,6 +277,7 @@ async function submitRequest() {
     e.preventDefault();
     interrupt.abort('Stop button pressed');
   };
+    
   // add button after sendButton
   const sendButton = document.getElementById('send-button');
   sendButton.insertAdjacentElement('beforebegin', stopButton);
@@ -378,7 +381,7 @@ function loadSelectedChat() {
   const obj = JSON.parse(localStorage.getItem(selectedChat));
   document.getElementById("chat-history").innerHTML = obj.history;
   document.getElementById("chat-history").context = obj.context;
-  updateModelInQueryString(obj.model)
+  updateModelInQueryString(obj.model);
   document.getElementById('chat-container').style.display = 'block';
 }
 

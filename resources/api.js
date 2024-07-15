@@ -24,12 +24,16 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.id) {
   }
 }
 
-
 var ollama_host = localStorage.getItem("host-address");
 if (!ollama_host){
   ollama_host = 'http://localhost:11434'
 } else {
   document.getElementById("host-address").value = ollama_host;
+}
+
+const ollama_system_prompt = localStorage.getItem("system-prompt");
+if (ollama_system_prompt){
+  document.getElementById("system-prompt").value = ollama_system_prompt;
 }
 
 if (rebuildRules){
@@ -45,7 +49,10 @@ function setHostAddress(){
   }
 }
 
-
+function setSystemPrompt(){
+  const systemPrompt = document.getElementById("system-prompt").value;
+  localStorage.setItem("system-prompt", systemPrompt);
+}
 
 async function getModels(){
   const response = await fetch(`${ollama_host}/api/tags`);
