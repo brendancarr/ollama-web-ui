@@ -50,6 +50,8 @@ function setHostAddress(){
 async function getModels(){
   const response = await fetch(`${ollama_host}/api/tags`);
   const data = await response.json();
+    // getting data back here means we're connected
+  document.getElementById("scroll-wrapper").prepend("Connected to Host");
   return data;
 }
 

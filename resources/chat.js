@@ -9,6 +9,8 @@ To support more origins, you can use the OLLAMA_ORIGINS environment variable:
 OLLAMA_ORIGINS=${window.location.origin} ollama serve
 \`\`\`
 
+OR use OLLAMA_ORIGINS=*
+
 Also see: https://github.com/jmorganca/ollama/blob/main/docs/faq.md
 `;
 
@@ -346,7 +348,7 @@ window.onload = () => {
   document.getElementById("saveName").addEventListener("click", saveChat);
   document.getElementById("chat-select").addEventListener("change", loadSelectedChat);
   document.getElementById("host-address").addEventListener("change", setHostAddress);
-}
+};
 
 function deleteChat() {
   const selectedChat = document.getElementById("chat-select").value;
